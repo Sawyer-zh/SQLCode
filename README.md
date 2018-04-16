@@ -238,6 +238,184 @@ order by hire_date desc
 
 **在where中可以使用取模运算符**。
 
+## 12、获取当前薪水第二多的员工的emp_no以及其对应的薪水salary
+
+[题目](https://www.nowcoder.com/practice/8d2c290cc4e24403b98ca82ce45d04db?tpId=82&tqId=29769&rp=0&ru=/ta/sql&qru=/ta/sql/question-ranking)
+
+```Mysql
+CREATE TABLE `salaries` (
+`emp_no` int(11) NOT NULL,
+`salary` int(11) NOT NULL,
+`from_date` date NOT NULL,
+`to_date` date NOT NULL,
+PRIMARY KEY (`emp_no`,`from_date`));
+```
+
+```mysql
+select emp_no, salary 
+from salaries
+where salary 
+= 
+(
+select salary 
+from salaries 
+where to_date = "9999-01-01"
+order by salary desc
+limit 1, 1
+)
+```
+
+注意，薪水第二多的可能有多个人。
+
+## 13、获取当前薪水第二多的员工的emp_no以及其对应的薪水salary，不准使用order by
+
+[题目](https://www.nowcoder.com/practice/c1472daba75d4635b7f8540b837cc719?tpId=82&tqId=29770&rp=0&ru=/ta/sql&qru=/ta/sql/question-ranking)
+
+```mysql
+CREATE TABLE `employees` (
+`emp_no` int(11) NOT NULL,
+`birth_date` date NOT NULL,
+`first_name` varchar(14) NOT NULL,
+`last_name` varchar(16) NOT NULL,
+`gender` char(1) NOT NULL,
+`hire_date` date NOT NULL,
+PRIMARY KEY (`emp_no`));
+CREATE TABLE `salaries` (
+`emp_no` int(11) NOT NULL,
+`salary` int(11) NOT NULL,
+`from_date` date NOT NULL,
+`to_date` date NOT NULL,
+PRIMARY KEY (`emp_no`,`from_date`));
+```
+
+```mysql
+select e.emp_no, s.salary, e.last_name, e.first_name
+from employees as e
+join salaries as s
+on e.emp_no = s.emp_no
+where s.to_date = "9999-01-01"
+and s.salary
+=
+(
+select max(salary)
+from salaries
+where salary <> (select max(salary) from salaries where to_date = "9999-01-01")
+and to_date = "9999-01-01"
+)
+```
+
+## 14、查找所有员工的last_name和first_name以及对应的dept_name，也包括暂时没有分配部门的员工
+
+[题目](https://www.nowcoder.com/practice/5a7975fabe1146329cee4f670c27ad55?tpId=82&tqId=29771&rp=0&ru=%2Fta%2Fsql&qru=%2Fta%2Fsql%2Fquestion-ranking&tPage=1)
+
+```mysql
+CREATE TABLE `departments` (
+`dept_no` char(4) NOT NULL,
+`dept_name` varchar(40) NOT NULL,
+PRIMARY KEY (`dept_no`));
+CREATE TABLE `dept_emp` (
+`emp_no` int(11) NOT NULL,
+`dept_no` char(4) NOT NULL,
+`from_date` date NOT NULL,
+`to_date` date NOT NULL,
+PRIMARY KEY (`emp_no`,`dept_no`));
+CREATE TABLE `employees` (
+`emp_no` int(11) NOT NULL,
+`birth_date` date NOT NULL,
+`first_name` varchar(14) NOT NULL,
+`last_name` varchar(16) NOT NULL,
+`gender` char(1) NOT NULL,
+`hire_date` date NOT NULL,
+PRIMARY KEY (`emp_no`));
+```
+
+```mysql
+select e.last_name, e.first_name, dpart.dept_name 
+from employees as e 
+left join dept_emp as demp 
+on e.emp_no = demp.emp_no 
+left join departments as dpart 
+on demp.dept_no = dpart.dept_no
+```
+
+注意，这里两次连接都需要使用外连接，因为只要使用了一次内连接，都会把没有分配部门的员工从结果集中剔除出去。
+
+## 15、查找员工编号emp_now为10001其自入职以来的薪水salary涨幅值growth
+
+```mysql
+CREATE TABLE `salaries` (
+`emp_no` int(11) NOT NULL,
+`salary` int(11) NOT NULL,
+`from_date` date NOT NULL,
+`to_date` date NOT NULL,
+PRIMARY KEY (`emp_no`,`from_date`));
+```
+
+错误答案：
+
+```mysql
+SELECT ( 
+(SELECT max(salary) FROM salaries group by emp_no WHERE emp_no = 10001) -
+(SELECT min(salary) FROM salaries group by emp_no WHERE emp_no = 10001)
+)
+AS growth
+```
+
+因为group by需要在where后面使用。
+
+所以改为：
+
+```mysql
+SELECT ( 
+(SELECT max(salary) FROM salaries WHERE emp_no = 10001 group by emp_no) -
+(SELECT min(salary) FROM salaries WHERE emp_no = 10001 group by emp_no)
+)
+AS growth
+```
+
+但是这样是多余写法，因为
+
+```mysql
+SELECT min(salary) FROM salaries WHERE emp_no = 10001
+```
+
+得到的结果集已经就是emp_no 等于 10001的唯一记录了。
+
+所以可以直接：
+
+```mysql
+SELECT ( 
+(SELECT max(salary) FROM salaries WHERE emp_no = 10001) -
+(SELECT min(salary) FROM salaries WHERE emp_no = 10001)
+)
+AS growth
+```
+
+更加简短的的写法：
+
+```mysql
+SELECT (MAX(salary)-MIN(salary)) AS growth 
+FROM salaries WHERE emp_no = '10001'
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
