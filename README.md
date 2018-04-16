@@ -342,6 +342,8 @@ on demp.dept_no = dpart.dept_no
 
 ## 15、查找员工编号emp_now为10001其自入职以来的薪水salary涨幅值growth
 
+[题目](https://www.nowcoder.com/practice/c727647886004942a89848e2b5130dc2?tpId=82&tqId=29772&rp=0&ru=/ta/sql&qru=/ta/sql/question-ranking)
+
 ```mysql
 CREATE TABLE `salaries` (
 `emp_no` int(11) NOT NULL,
@@ -396,6 +398,36 @@ AS growth
 ```mysql
 SELECT (MAX(salary)-MIN(salary)) AS growth 
 FROM salaries WHERE emp_no = '10001'
+```
+
+## 16、查找所有员工自入职以来的薪水涨幅情况
+
+[题目](https://www.nowcoder.com/practice/fc7344ece7294b9e98401826b94c6ea5?tpId=82&tqId=29773&tPage=2&rp=&ru=/ta/sql&qru=/ta/sql/question-ranking)
+
+查找所有员工自入职以来的薪水涨幅情况，给出员工编号emp_noy以及其对应的薪水涨幅growth，并按照growth进行升序：
+
+```mysql
+CREATE TABLE `employees` (
+`emp_no` int(11) NOT NULL,
+`birth_date` date NOT NULL,
+`first_name` varchar(14) NOT NULL,
+`last_name` varchar(16) NOT NULL,
+`gender` char(1) NOT NULL,
+`hire_date` date NOT NULL,
+PRIMARY KEY (`emp_no`));
+CREATE TABLE `salaries` (
+`emp_no` int(11) NOT NULL,
+`salary` int(11) NOT NULL,
+`from_date` date NOT NULL,
+`to_date` date NOT NULL,
+PRIMARY KEY (`emp_no`,`from_date`));
+```
+
+```mysql
+select sBefore.emp_no,(sCurrent.salary-sBefore.salary) as growth from 
+(select salary,e.emp_no from employees as e join salaries as s on s.from_date=e.hire_date) as sBefore
+join (select salary,emp_no from salaries where to_date='9999-01-01') as sCurrent
+on sBefore.emp_no=sCurrent.emp_no order by growth asc
 ```
 
 
